@@ -1,0 +1,93 @@
+﻿@using X.PagedList
+@using X.PagedList.Mvc
+@model ShowMe.Models.EventDetailsViewModel
+
+@{
+    ViewBag.Title = "Event";
+}
+
+<h2>@Model.Details.Name</h2>
+
+<p>
+  <strong>@(Model.Details.Venue?.Name), @(Model.Details.Venue?.City), @(Model.Details.Venue?.Country?.Name)</strong> <br />
+  @(Model.Details.StartDate?.ToString("f") ?? "N/A")
+</p>
+
+@Html.Raw(Model.Details.Notes)
+
+<hr />
+
+<h4>Tickets</h4>
+<div class="row" style="margin: 2rem 0;">
+  <div class="col-md-12">
+    <h4>Filters</h4>
+    @using (Html.BeginForm("Details", "Event", FormMethod.Get, new { @class = "form-inline" }))
+    {
+        <div class="form-group">
+          <label for="Quantity">No Tickets</label>
+          @Html.TextBoxFor(model => model.Quantity)
+        </div>
+        <button type="submit" class="btn btn-primary">Search</button>
+    }
+  </div>
+</div>
+
+
+<div class="row">
+  <div class="col-md-12">
+    @if (Model.HasSearch && !Model.Listings.Any())
+    {
+        <p>No Tickets available</p>
+    }
+    else
+    {
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Seating</th>
+              <th>Tickets</th>
+              <th>Price</th>
+              <th>Type</th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach (var listing in Model.Listings)
+            {
+                <tr>
+                  <td>
+                    @if (listing.Seating != null)
+                    {
+                      if (!string.IsNullOrEmpty(listing.Seating.Section))
+                      {
+                            <strong>Section:</strong>
+                            @listing.Seating.Section
+                      }
+                      if (!string.IsNullOrEmpty(listing.Seating.Row))
+                      {
+                            <strong> Row:</strong>
+                            @listing.Seating.Row
+                      }
+                    }
+                    else
+                    {
+                        <text>"N/A"</text>
+                    }
+                  </td>
+                  <td>@listing.NumberOfTickets.GetValueOrDefault()</td>
+                  <td>@listing.TicketPrice.Display</td>
+                  <td>@listing.TicketType.Name</td>
+                </tr>
+            }
+          </tbody>
+        </table>
+
+    }
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-6 col-md-offset-3">
+    @Html.PagedListPager((IPagedList)Model.Listings, page => Url.Action("Details", new { page, eventId = Model.Details.Id, quantity = Model.Quantity }))
+  </div>
+</div>
+

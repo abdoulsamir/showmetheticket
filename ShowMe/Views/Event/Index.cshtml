@@ -1,0 +1,91 @@
+﻿@model ShowMe.Models.EventsViewModel
+@{
+    ViewBag.Title = "Events";
+}
+@using X.PagedList
+@using X.PagedList.Mvc
+
+@Styles.Render("~/Content/PagedList.css")
+
+<h2>Events</h2>
+
+<div class="row" style="margin: 5rem 0;">
+  <div class="col-md-12">
+    <h4>Filters</h4>
+    @using (Html.BeginForm("Index", "Event", FormMethod.Get, new { @class = "form-inline" }))
+    {
+        <div class="form-group">
+          <label for="SearchString">Artist</label>
+          @Html.TextBoxFor(model => model.SearchString)
+        </div>
+        <div class="form-group">
+          <label for="SearchDate">Date</label>
+          @Html.EditorFor(model => model.SearchDate)
+        </div>
+        <button type="submit" class="btn btn-primary">Search</button>
+    }
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-12">
+
+    @if (!Model.HasSearch)
+    {
+        <p>Enter an artist name to search for events</p>
+    }
+    else if (Model.HasSearch && !Model.Events.Any())
+    {
+        <p>No results to show. Try searching for a different artist and/or date</p>
+    }
+    else
+    {
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Date</th>
+              <th>On Sale From</th>
+              <th>No. Tickets</th>
+              <th>Price From</th>
+              <th>Venue</th>
+              <th>Location</th>
+              <th>Category</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach (var modelEvent in Model.Events)
+            {
+                <tr>
+                  <td scope="row">@modelEvent.Name</td>
+                  <td>@(modelEvent.StartDate?.ToString("g") ?? "")</td>
+                  <td>@(modelEvent.OnSaleDate?.ToString("g") ?? "")</td>
+                  <td>@(modelEvent.NumberOfTickets ?? 0)</td>
+                  <td>
+                    @(modelEvent.MinTicketPrice?.Display ?? "N/A")
+                    @if (Model.CheapestEventsPerCountry.Contains(modelEvent.Id.Value))
+                    {
+                        <strong class="text-danger">Cheapest</strong>
+                    }
+                  </td>
+                  <td>@(modelEvent.Venue?.Name)</td>
+                  <td>@(modelEvent.Venue?.City), @(modelEvent.Venue.Country?.Name)</td>
+                  <td>
+                    @Html.ActionLink("Details", "Details", "Event", new { eventId = modelEvent.Id.GetValueOrDefault() }, null)
+                  </td>
+                </tr>
+            }
+          </tbody>
+        </table>
+    }
+
+  </div>
+</div>
+
+
+<div class="row">
+  <div class="col-md-6 col-md-offset-3">
+    @Html.PagedListPager((IPagedList)Model.Events, page => Url.Action("Index", new { page, categoryId = Model.CategoryId }))
+  </div>
+</div>
